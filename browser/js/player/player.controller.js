@@ -17,7 +17,7 @@ app.controller('PlayerCtrl', function($scope) {
     socket.on('raceEnd', function() {
     	isPlaying = false;
     })
-
+    //ALL CREDIT REGARDING THE LOGIC SURROUNDING PITCH SHALL GO TO https://github.com/cwilso/PitchDetect
 
     function getUserMedia(dictionary, callback) {
         try {
