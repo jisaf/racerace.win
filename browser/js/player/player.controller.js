@@ -9,14 +9,14 @@ app.controller('PlayerCtrl', function($scope) {
     const buf = new Float32Array(buflen);
     let isPlaying = false;
 
-    // socket.on('raceStart', function() {
-    // 	isPlaying = true;
+    socket.on('raceStart', function() {
+    	isPlaying = true;
         toggleLiveInput();
-    // })
+    })
 
-    // socket.on('raceEnd', function() {
-    // 	isPlaying = false;
-    // })
+    socket.on('raceEnd', function() {
+    	isPlaying = false;
+    })
 
 
     function getUserMedia(dictionary, callback) {
@@ -122,16 +122,16 @@ app.controller('PlayerCtrl', function($scope) {
     const lastFivePitches = [0, 0, 0, 0, 0];
     let i =0;
     function updatePitch(time) {
-    	// if(!isPlaying){
-    	// 	return false;
-    	// }
+    	if(!isPlaying){
+    		return false;
+    	}
         analyser.getFloatTimeDomainData(buf);
         const ac = autoCorrelate(buf, audioContext.sampleRate);
 
         console.log('ac', ac)
         if (ac == -1) {
             //this is equivalent to slamming on the brake -- velocity goes to 0
-        	// socket.emit('velocity', {velocity: 0})
+        	socket.emit('velocity', {velocity: 0})
         } else {
             lastFivePitches.shift();
             lastFivePitches.push(ac);
@@ -147,17 +147,11 @@ app.controller('PlayerCtrl', function($scope) {
             	velocity = averagePitch/350;
             }
             console.log(velocity)
-            // socket.emit('velocity', {velocity: velocity});
+            socket.emit('velocity', {velocity: velocity});
         }
 
         if (!window.requestAnimationFrame) {
             window.requestAnimationFrame = window.webkitRequestAnimationFrame;
-        }
-        debugger;
-        i++;
-        // console.log(i)
-        if(i===100){
-        	return;
         }
         rafID = window.requestAnimationFrame(updatePitch);
     }
