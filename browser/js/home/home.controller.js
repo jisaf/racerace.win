@@ -1,4 +1,4 @@
-app.controller('HomeCtrl', function($scope) {
+app.controller('HomeCtrl', function($scope, Socket) {
     //=========================================================================
     // minimalist DOM helpers
     //=========================================================================
@@ -145,6 +145,7 @@ app.controller('HomeCtrl', function($scope) {
     var cameraHeight = 1000; // z height of camera
     var cameraDepth = null; // z distance camera is from screen (computed)
     var drawDistance = 300; // number of segments to draw
+
 
     function Game(canvas, id) {
         this.gdt = 0;
@@ -299,30 +300,43 @@ app.controller('HomeCtrl', function($scope) {
                 requestAnimationFrame(frame, canvas);
             }
             frame();
-        });
+
+            // Socket.on("velocity", function(data) {
+            //     console.log("forward")
+            //     if (data.id === this.id) {
+            //         this.setKeyListener({ keycode: 38 })
+            //     }
+            // })
+        })
     };
 
+    Game.prototype.setSpeed = function(v, id) {
+        if (this.id === id) {
+            this.speed = Util.limit(v, 0, maxSpeed);
+        }
+    }
+
     Game.prototype.update = function(dt) {
-        this.position = Util.increase(this.position, dt * this.speed, this.trackLength);
+            this.position = Util.increase(this.position, dt * this.speed, this.trackLength);
 
-        // REPLACE WITH VOICE POWER: PITCH
-        var dx = dt * 2 * (this.speed / maxSpeed);
-        if (this.keyLeft)
-            this.playerX = this.playerX - dx;
-        else if (this.keyRight)
-            this.playerX = this.playerX + dx;
+            // REPLACE WITH VOICE POWER: PITCH
+            // var dx = dt * 2 * (this.speed / maxSpeed);
+            // if (this.keyLeft)
+            //     this.playerX = this.playerX - dx;
+            // else if (this.keyRight)
+            //     this.playerX = this.playerX + dx;
 
-        // REPLACE WITH VOICE POWER: VELOCITY
-        if (this.keyFaster)
-            this.speed = Util.accelerate(this.speed, accel, dt);
-        else if (this.keySlower)
-            this.speed = Util.accelerate(this.speed, breaking, dt);
-        else
-            this.speed = Util.accelerate(this.speed, decel, dt);
-        if (((this.playerX < -1) || (this.playerX > 1)) && (this.speed > offRoadLimit))
-            this.speed = Util.accelerate(this.speed, offRoadDecel, dt);
-        this.playerX = Util.limit(this.playerX, -2, 2);
-        this.speed = Util.limit(this.speed, 0, maxSpeed);
+            // REPLACE WITH VOICE POWER: VELOCITY
+            // if (this.keyFaster)
+            //     this.speed = Util.accelerate(this.speed, accel, dt);
+            // else if (this.keySlower)
+            //     this.speed = Util.accelerate(this.speed, breaking, dt);
+            // else
+            //     this.speed = Util.accelerate(this.speed, decel, dt);
+            // if (((this.playerX < -1) || (this.playerX > 1)) && (this.speed > offRoadLimit))
+            //     this.speed = Util.accelerate(this.speed, offRoadDecel, dt);
+            this.playerX = Util.limit(this.playerX, -2, 2);
+            this.speed = Util.limit(this.speed, 0, maxSpeed);
     };
 
     Game.prototype.render = function() {
@@ -398,7 +412,6 @@ app.controller('HomeCtrl', function($scope) {
                 k = keys[n];
                 k.mode = k.mode || 'up';
                 if (k.id === self.id) {
-
                     if ((k.key == keyCode) || (k.keys && (k.keys.indexOf(keyCode) >= 0))) {
                         if (k.mode == mode) {
                             k.action.call();
@@ -406,8 +419,7 @@ app.controller('HomeCtrl', function($scope) {
                     }
                 }
             }
-        };
-
+        }
         Dom.on(document, 'keydown', function(ev) {
             onkey(ev.keyCode, 'down');
         });
@@ -415,8 +427,6 @@ app.controller('HomeCtrl', function($scope) {
             onkey(ev.keyCode, 'up');
         });
     };
-
-    //---------------------------------------------------------------------------
 
 
 
@@ -469,7 +479,6 @@ app.controller('HomeCtrl', function($scope) {
                 color: Math.floor(n / rumbleLength) % 2 ? COLORS.DARK : COLORS.LIGHT
             });
         }
-
         this.segments[this.findSegment(this.playerZ).index + 2].color = COLORS.START;
         this.segments[this.findSegment(this.playerZ).index + 3].color = COLORS.START;
         for (var n = 0; n < rumbleLength; n++)
@@ -663,17 +672,36 @@ app.controller('HomeCtrl', function($scope) {
 
     SPRITES.PLANTS = [SPRITES.TREE1, SPRITES.TREE2, SPRITES.DEAD_TREE1, SPRITES.DEAD_TREE2, SPRITES.PALM_TREE, SPRITES.BUSH1, SPRITES.BUSH2, SPRITES.CACTUS, SPRITES.STUMP, SPRITES.BOULDER1, SPRITES.BOULDER2, SPRITES.BOULDER3];
 
-    SPRITES.CARS = [SPRITES.CAR01, SPRITES.CAR02, SPRITES.CAR03, SPRITES.CAR04, SPRITES.SEMI, SPRITES.TRUCK];
+    var games = [];
+    let numPeople = 0;
+    let playerOne;
+    let playerTwo;
 
+    Socket.on('playerJoin', function(data) {
+        numPeople++;
+        if (numPeople === 1) {
+            playerOne = data;
+        }
+        if (numPeople === 2) {
+            playerTwo = data;
+            Socket.emit('raceStart');
+        }
+        var newGame;
+        if (games.length === 0) {
+            newGame = new Game('canvas1', data.id);
+        } else {
+            newGame = new Game('canvas2', data.id)
+        }
 
-    var Game1 = new Game('canvas1', 1);
-    window.game1 = Game1;
-    var Game2 = new Game('canvas2', 2);
-    Game1.run({
-        images: ["background", "sprites2"]
-    });
-    Game2.run({
-        images: ["background", "sprites2"]
-    });
+        games.push(newGame);
+        newGame.run({
+            images: ["background", "sprites"]
+        });
+    })
 
-});
+    Socket.on('velocity', function(data) {
+        var id = data.socket;
+        var velocity = data.velocity.velocity;
+        games.forEach((game) => game.setSpeed(velocity*10000, id))
+    })
+})
