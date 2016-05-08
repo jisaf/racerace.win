@@ -1,7 +1,7 @@
 app.config(function ($stateProvider) {
     $stateProvider.state('home', {
-        url: '/',
+        url: '/:roomId/host',
         controller: 'HomeCtrl',
-        templateUrl: '/home.html'
+        templateUrl: '/js/home/home.html'
     });
 });
