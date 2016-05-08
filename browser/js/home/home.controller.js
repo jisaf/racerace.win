@@ -1,7 +1,7 @@
-//=========================================================================
+app.controller('HomeCtrl', function($scope){
+    //=========================================================================
 // minimalist DOM helpers
 //=========================================================================
-console.log('hello!!!!!')
 
 var Dom = {
     get: function(id) {
@@ -165,7 +165,6 @@ Game.prototype.findSegment = function(z) {
 }
 
 Game.prototype.run = function(options) {
-    console.log('run')
     var currentGame = this;
     var canvas = this.canvas;
     this.loadImages(options.images, function(images) {
@@ -233,7 +232,6 @@ Game.prototype.run = function(options) {
     }]);
 
     function frame() {
-        console.log('frameee')
         now = Util.timestamp();
         dt = Math.min(1, (now - last) / 1000);
         currentGame.gdt = currentGame.gdt + dt;
@@ -307,26 +305,12 @@ Game.prototype.render = function() {
 //---------------------------------------------------------------------------
 
 Game.prototype.loadImages = function(names, callback) { // load multiple images and callback when ALL images have loaded
-    // var result = [];
-    // var count = names.length;
-
-    // var onload = function() {
-    //     if (--count == 0)
-    //         callback(result);
-    // };
-
-    // for (var n = 0; n < names.length; n++) {
-    //     var name = names[n];
-    //     result[n] = document.createElement('img');
-    //     Dom.on(result[n], 'load', onload);
-    //     result[n].src = "images/" + name + ".png";
-    // }
 
     // HACKY CODE!
     background = document.createElement('img');
-    background.src = "images/background/background.png";
+    background.src = "./js/racing_iris/images/background/background.png";
     sprites = document.createElement('img');
-    sprites.src = "images/sprites/sprites.png";
+    sprites.src = "./js/racing_iris/images/sprites/sprites.png";
 };
 
 //---------------------------------------------------------------------------
@@ -610,3 +594,17 @@ SPRITES.SCALE = 0.3 * (1 / SPRITES.PLAYER_STRAIGHT.w) // the reference sprite wi
 SPRITES.BILLBOARDS = [SPRITES.BILLBOARD01, SPRITES.BILLBOARD02, SPRITES.BILLBOARD03, SPRITES.BILLBOARD04, SPRITES.BILLBOARD05, SPRITES.BILLBOARD06, SPRITES.BILLBOARD07, SPRITES.BILLBOARD08, SPRITES.BILLBOARD09];
 SPRITES.PLANTS = [SPRITES.TREE1, SPRITES.TREE2, SPRITES.DEAD_TREE1, SPRITES.DEAD_TREE2, SPRITES.PALM_TREE, SPRITES.BUSH1, SPRITES.BUSH2, SPRITES.CACTUS, SPRITES.STUMP, SPRITES.BOULDER1, SPRITES.BOULDER2, SPRITES.BOULDER3];
 SPRITES.CARS = [SPRITES.CAR01, SPRITES.CAR02, SPRITES.CAR03, SPRITES.CAR04, SPRITES.SEMI, SPRITES.TRUCK];
+
+
+    var Game1 = new Game('canvas1', 1);
+    window.x = 'hello'
+    window.game1  = Game1;
+    var Game2 = new Game('canvas2', 2);
+    Game1.run({
+        images: ["background", "sprites"]
+    });
+    Game2.run({
+        images: ["background", "sprites"]
+    });
+
+})
