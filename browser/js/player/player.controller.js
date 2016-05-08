@@ -7,16 +7,16 @@ app.controller('PlayerCtrl', function($scope) {
     const MIN_SAMPLES = 0; // will be initialized when AudioContext is created.
     const buflen = 1024;
     const buf = new Float32Array(buflen);
-    let isPlaying = false;
+    // let isPlaying = false;
 
-    socket.on('raceStart', function() {
-    	isPlaying = true;
+    // socket.on('raceStart', function() {
+    // 	isPlaying = true;
         toggleLiveInput();
-    })
+    // })
 
-    socket.on('raceEnd', function() {
-    	isPlaying = false;
-    })
+    // socket.on('raceEnd', function() {
+    // 	isPlaying = false;
+    // })
     //ALL CREDIT REGARDING THE LOGIC SURROUNDING PITCH SHALL GO TO https://github.com/cwilso/PitchDetect
 
     if (window.DeviceOrientationEvent) {
@@ -32,7 +32,7 @@ app.controller('PlayerCtrl', function($scope) {
             let averageOrientation = deviceOrientation.reduce(function(prev, curr){
                 return prev + curr
             }, 0)/ deviceOrientation.length
-            socket.emit('xOrientationChange', {deviceXOrientation: averageOrientation})
+            // socket.emit('xOrientationChange', {deviceXOrientation: averageOrientation})
         }
 
 
@@ -154,33 +154,44 @@ app.controller('PlayerCtrl', function($scope) {
     const lastFivePitches = [0, 0, 0, 0, 0];
     let i =0;
     function updatePitch(time) {
-    	if(!isPlaying){
-    		return false;
-    	}
+    	// if(!isPlaying){
+    	// 	return false;
+    	// }
         analyser.getFloatTimeDomainData(buf);
         const ac = autoCorrelate(buf, audioContext.sampleRate);
 
         console.log('ac', ac)
+        let velocity;
         if (ac == -1) {
             //this is equivalent to slamming on the brake -- velocity goes to 0
-        	socket.emit('velocity', {velocity: 0})
+            velocity = 0;
         } else {
-            lastFivePitches.shift();
-            lastFivePitches.push(ac);
-            let averagePitch = lastFivePitches.reduce(function(prev, curr) {
-                return prev + curr
-            }, 0) / lastFivePitches.length; //should be 5, unless we change how many things to track
-            let velocity;
-            if(averagePitch > 350){
-            	velocity = 350/averagePitch;
-            } else if (averagePitch > 600) {
-            	velocity = 0;
-            }else {
-            	velocity = averagePitch/350;
+            // console.log('in else')
+            if (Math.abs(ac - lastFivePitches[lastFivePitches.length-1]) > 50){
+                lastFivePitches.shift();
+                lastFivePitches.push(ac);
+                let averagePitch = lastFivePitches.reduce(function(prev, curr) {
+                    return prev + curr
+                }, 0) / lastFivePitches.length; //should be 5, unless we change how many things to track
+                console.log('ap',averagePitch)
+                if(averagePitch > 350){
+                	velocity = 350/averagePitch;
+                } else if (averagePitch > 600) {
+                	velocity = 0;
+                }else {
+                	velocity = averagePitch/350;
+                }
+                // console.log('veloc',velocity)
+                $scope.velocity = velocity;
+                // console.log('scopeee',$scope.velocity)
+                $scope.prettyVelocity = Math.round(velocity * 230)
+                console.log('pv',$scope.prettyVelocity)
+                $scope.$apply();
             }
-            console.log(velocity)
-            socket.emit('velocity', {velocity: velocity});
         }
+        // socket.emit('velocity', {velocity: velocity});
+
+
 
         if (!window.requestAnimationFrame) {
             window.requestAnimationFrame = window.webkitRequestAnimationFrame;
