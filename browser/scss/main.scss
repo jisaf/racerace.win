@@ -1,9 +1,11 @@
 * {
   box-sizing: border-box;
+  font-family: 'Montserrat', sans-serif;
 }
 
+
 body {
-  background: #fdfdfd;
+  background: #53B3FC;
 }
 
 @mixin clearfix {
@@ -21,6 +23,7 @@ body {
 
 @import 'directives/main';
 @import 'home/main';
+@import 'homepage/main';
 @import 'about/main';
 @import 'tutorial/main';
 @import 'login/main';

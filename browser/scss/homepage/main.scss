@@ -1,0 +1,29 @@
+#container {
+    // display: flex;
+    background-color: #F7F7F7;
+    border-radius: 3px;
+    padding: 10px;
+    text-align: center;
+    word-wrap: break-word;
+}
+
+h1, h2 {
+    text-align: center;
+    margin-top: 0px;
+}
+
+h1 {
+    color: #6B656F;
+}
+
+ul {
+    padding-left: 0px;
+    .listItem {
+        text-align: center;
+        padding-left: 10px;
+        font-size: 30px;
+        color: #333;
+        list-style: none;
+        border-bottom: 1px solid #eee;
+    }
+}
