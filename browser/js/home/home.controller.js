@@ -1,4 +1,4 @@
-app.controller('HomeCtrl', function($scope){
+app.controller('HomeCtrl', function($scope, Socket){
     //=========================================================================
 // minimalist DOM helpers
 //=========================================================================
@@ -173,63 +173,7 @@ Game.prototype.run = function(options) {
     });
     this.reset();
     // Set up Key listeners
-    this.setKeyListener([{
-        keys: [KEY.UP1],
-        id: 1,
-        mode: 'down',
-        action: function() {
-            currentGame.keyFaster = true;
-        }
-    }, {
-        keys: [KEY.DOWN1],
-        id: 1,
-        mode: 'down',
-        action: function() {
-            currentGame.keySlower = true;
-        }
-    }, {
-        keys: [KEY.UP2],
-        id: 2,
-        mode: 'down',
-        action: function() {
-            currentGame.keyFaster = true;
-        }
-    }, {
-        keys: [KEY.DOWN2],
-        id: 2,
-        mode: 'down',
-        action: function() {
-            currentGame.keySlower = true;
-        }
-    }, {
-        keys: [KEY.UP1],
-        id: 1,
-        mode: 'up',
-        action: function() {
-            currentGame.keyFaster = false;
-        }
-    }, {
-        keys: [KEY.DOWN1],
-        id: 1,
-        mode: 'up',
-        action: function() {
-            currentGame.keySlower = false;
-        }
-    }, {
-        keys: [KEY.UP2],
-        id: 2,
-        mode: 'up',
-        action: function() {
-            currentGame.keyFaster = false;
-        }
-    }, {
-        keys: [KEY.DOWN2],
-        id: 2,
-        mode: 'up',
-        action: function() {
-            currentGame.keySlower = false;
-        }
-    }]);
+    //this.setKeyListener(
 
     function frame() {
         now = Util.timestamp();
@@ -241,6 +185,13 @@ Game.prototype.run = function(options) {
         requestAnimationFrame(frame, canvas);
     }
     frame();
+
+    Socket.on("velocity", function(data){
+        console.log("forward")
+        if(data.id === this.id) {
+            this.setKeyListener({keycode: 38})
+        }
+    })
 };
 
 Game.prototype.update = function(dt) {
@@ -261,6 +212,7 @@ Game.prototype.update = function(dt) {
 Game.prototype.render = function() {
     var ctx = this.canvas.getContext('2d');
     var speed = this.speed;
+
     var baseSegment = this.findSegment(this.position);
     var maxy = height;
     ctx.clearRect(0, 0, width, height);
@@ -314,18 +266,93 @@ Game.prototype.loadImages = function(names, callback) { // load multiple images 
 };
 
 //---------------------------------------------------------------------------
+var KEY = {
+    UP1: 38,
+    DOWN1: 40,
+    UP2: 87,
+    DOWN2: 83
+};
 
-Game.prototype.setKeyListener = function(keys) {
+var KEYS = [{
+        keys: [KEY.UP1],
+        id: 1,
+        mode: 'down',
+        action: function() {
+            currentGame.keyFaster = true;
+        }
+    }, {
+        keys: [KEY.DOWN1],
+        id: 1,
+        mode: 'down',
+        action: function() {
+            currentGame.keySlower = true;
+        }
+    }, {
+        keys: [KEY.UP2],
+        id: 2,
+        mode: 'down',
+        action: function() {
+            currentGame.keyFaster = true;
+        }
+    }, {
+        keys: [KEY.DOWN2],
+        id: 2,
+        mode: 'down',
+        action: function() {
+            currentGame.keySlower = true;
+        }
+    }, {
+        keys: [KEY.UP1],
+        id: 1,
+        mode: 'up',
+        action: function() {
+            currentGame.keyFaster = false;
+        }
+    }, {
+        keys: [KEY.DOWN1],
+        id: 1,
+        mode: 'up',
+        action: function() {
+            currentGame.keySlower = false;
+        }
+    }, {
+        keys: [KEY.UP2],
+        id: 2,
+        mode: 'up',
+        action: function() {
+            currentGame.keyFaster = false;
+        }
+    }, {
+        keys: [KEY.DOWN2],
+        id: 2,
+        mode: 'up',
+        action: function() {
+            currentGame.keySlower = false;
+        }
+    }]//);
+
+
+
+
+
+
+
+
+Game.prototype.setKeyListener = function(data) {
     var self = this;
 
     var onkey = function(keyCode, mode) {
+        console.log("in onkeys")
         var n, k;
-        for (n = 0; n < keys.length; n++) {
-            k = keys[n];
+        console.log(KEYS)
+        for (n = 0; n < KEYS.length; n++) {
+            console.log(n)
+            k = KEYS[n];
             k.mode = k.mode || 'up';
-            if (k.id === self.id) {
-
-                if ((k.key == keyCode) || (k.keys && (k.keys.indexOf(keyCode) >= 0))) {
+            console.log(k)
+            if (k.id === this.id) {
+                console.log("in this")
+                if ((k.key == keyCode) || (k.KEYS && (k.KEYS.indexOf(keyCode) >= 0))) {
                     if (k.mode == mode) {
                         k.action.call();
                     }
@@ -334,12 +361,13 @@ Game.prototype.setKeyListener = function(keys) {
         }
     };
 
-    Dom.on(document, 'keydown', function(ev) {
-        onkey(ev.keyCode, 'down');
-    });
-    Dom.on(document, 'keyup', function(ev) {
-        onkey(ev.keyCode, 'up');
-    });
+    onkey(data.keycode, 'down')
+    // Dom.on(document, 'keydown', function(ev) {
+    //     onkey(ev.keyCode, 'down');
+    // });
+    // Dom.on(document, 'keyup', function(ev) {
+    //     onkey(ev.keyCode, 'up');
+    // });
 };
 
 //---------------------------------------------------------------------------
@@ -529,12 +557,7 @@ var Render = {
 // RACING GAME CONSTANTS
 //=============================================================================
 
-var KEY = {
-    UP1: 38,
-    DOWN1: 40,
-    UP2: 87,
-    DOWN2: 83
-};
+
 
 var COLORS = {
     SKY: '#72D7EE',
@@ -595,16 +618,31 @@ SPRITES.BILLBOARDS = [SPRITES.BILLBOARD01, SPRITES.BILLBOARD02, SPRITES.BILLBOAR
 SPRITES.PLANTS = [SPRITES.TREE1, SPRITES.TREE2, SPRITES.DEAD_TREE1, SPRITES.DEAD_TREE2, SPRITES.PALM_TREE, SPRITES.BUSH1, SPRITES.BUSH2, SPRITES.CACTUS, SPRITES.STUMP, SPRITES.BOULDER1, SPRITES.BOULDER2, SPRITES.BOULDER3];
 SPRITES.CARS = [SPRITES.CAR01, SPRITES.CAR02, SPRITES.CAR03, SPRITES.CAR04, SPRITES.SEMI, SPRITES.TRUCK];
 
+    var numGames = 0;
 
-    var Game1 = new Game('canvas1', 1);
-    window.x = 'hello'
-    window.game1  = Game1;
-    var Game2 = new Game('canvas2', 2);
-    Game1.run({
-        images: ["background", "sprites"]
+    Socket.on('connection', function(data){
+        var newGame;
+        console.log("connected", data.id);
+        if (numGames > 0) {
+            newGame = new Game('canvas1', data.id);
+        }
+        else {newGame = new Game('canvas2', data.id)}
+
+        numGames++;
+        newGame.run({
+            images: ["background", "sprites"]
+        });
+        console.log("the games are")
+            console.log(numGames);
     });
-    Game2.run({
-        images: ["background", "sprites"]
-    });
+
+    // var Game1 = new Game('canvas1', );
+    // window.x = 'hello'
+    // window.game1  = Game1;
+    // var Game2 = new Game('canvas2', 2);
+
+    // Game2.run({
+    //     images: ["background", "sprites"]
+    // });
 
 })
