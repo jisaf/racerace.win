@@ -56,8 +56,6 @@ app.controller('PlayerCtrl', function($scope, Socket) {
         alert('not supported')
     }
 
-
-
     function getUserMedia(dictionary, callback) {
         try {
             navigator.getUserMedia =
@@ -73,8 +71,6 @@ app.controller('PlayerCtrl', function($scope, Socket) {
     }
 
     function toggleLiveInput() {
-        console.log('inside toggle');
-
         getUserMedia({
             "audio": {
                 "mandatory": {
@@ -89,8 +85,6 @@ app.controller('PlayerCtrl', function($scope, Socket) {
     }
 
     function gotStream(stream) {
-        console.log('inside gotstream');
-        console.log(stream);
         audioContext = new AudioContext();
         // Create an AudioNode from the stream.
         const mediaStreamSource = audioContext.createMediaStreamSource(stream);
@@ -98,7 +92,6 @@ app.controller('PlayerCtrl', function($scope, Socket) {
         // Connect it to the destination.
         analyser = audioContext.createAnalyser();
         analyser.fftSize = 2048;
-        console.log('this is the analyser', analyser)
         mediaStreamSource.connect(analyser);
         updatePitch();
     }
@@ -158,7 +151,7 @@ app.controller('PlayerCtrl', function($scope, Socket) {
         //	var best_frequency = sampleRate/best_offset;
     }
 
-    const lastFivePitches = [0, 0, 0, 0, 0];
+    let lastFivePitches = [0, 0];
     let i =0;
     function updatePitch(time) {
         // console.log(isPlaying)
@@ -168,14 +161,11 @@ app.controller('PlayerCtrl', function($scope, Socket) {
         analyser.getFloatTimeDomainData(buf);
         let ac = autoCorrelate(buf, audioContext.sampleRate);
 
-        // console.log('ac', ac)
         let velocity;
         if (ac === -1) {
             //this is equivalent to slamming on the brake -- velocity goes to 0
             velocity = 0;
             Socket.emit('velocity', {velocity: velocity});
-            // console.log("emiltting velocity")
-
         } else {
             if (Math.abs(ac - lastFivePitches[lastFivePitches.length-1]) > 50){
                 lastFivePitches.shift();
@@ -183,18 +173,16 @@ app.controller('PlayerCtrl', function($scope, Socket) {
                 let averagePitch = lastFivePitches.reduce(function(prev, curr) {
                     return prev + curr
                 }, 0) / lastFivePitches.length; //should be 5, unless we change how many things to track
-                // console.log('ap',averagePitch)
-                if(averagePitch > 350){
-                	velocity = 350/averagePitch;
-                } else if (averagePitch > 600) {
+                if(averagePitch > 500){
+                	velocity = 500/averagePitch;
+                } else if (averagePitch > 1000) {
                 	velocity = 0;
                 }else {
-                	velocity = averagePitch/350;
+                	velocity = averagePitch/500;
                 }
                 $scope.prettyVelocity = Math.round(velocity * 230)
                 $scope.$apply();
                 Socket.emit('velocity', {velocity: velocity});
-
             }
         }
 

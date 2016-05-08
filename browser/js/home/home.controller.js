@@ -136,7 +136,7 @@ app.controller('HomeCtrl', function($scope, Socket) {
     var background;
     var sprites;
     var width = 700; // logical canvas width
-    var height = 500; // logical canvas height
+    var height = 750; // logical canvas height
     var resolution = null; // scaling factor to provide resolution independence (computed)
     var roadWidth = 2000; // actually half the roads width
     var rumbleLength = 3; // number of segments per red/white rumble strip
@@ -300,13 +300,6 @@ app.controller('HomeCtrl', function($scope, Socket) {
                 requestAnimationFrame(frame, canvas);
             }
             frame();
-
-            // Socket.on("velocity", function(data) {
-            //     console.log("forward")
-            //     if (data.id === this.id) {
-            //         this.setKeyListener({ keycode: 38 })
-            //     }
-            // })
         })
     };
 
@@ -326,15 +319,6 @@ app.controller('HomeCtrl', function($scope, Socket) {
             // else if (this.keyRight)
             //     this.playerX = this.playerX + dx;
 
-            // REPLACE WITH VOICE POWER: VELOCITY
-            // if (this.keyFaster)
-            //     this.speed = Util.accelerate(this.speed, accel, dt);
-            // else if (this.keySlower)
-            //     this.speed = Util.accelerate(this.speed, breaking, dt);
-            // else
-            //     this.speed = Util.accelerate(this.speed, decel, dt);
-            // if (((this.playerX < -1) || (this.playerX > 1)) && (this.speed > offRoadLimit))
-            //     this.speed = Util.accelerate(this.speed, offRoadDecel, dt);
             this.playerX = Util.limit(this.playerX, -2, 2);
             this.speed = Util.limit(this.speed, 0, maxSpeed);
     };
@@ -682,7 +666,7 @@ app.controller('HomeCtrl', function($scope, Socket) {
         if (numPeople === 1) {
             playerOne = data;
         }
-        if (numPeople === 2) {
+        if (numPeople === 1) {
             playerTwo = data;
             Socket.emit('raceStart');
         }
