@@ -19,6 +19,38 @@ app.controller('PlayerCtrl', function($scope) {
     })
     //ALL CREDIT REGARDING THE LOGIC SURROUNDING PITCH SHALL GO TO https://github.com/cwilso/PitchDetect
 
+    if (window.DeviceOrientationEvent) {
+      const deviceOrientation = [0, 0, 0, 0, 0];
+      // Listen for the deviceorientation event and handle the raw data
+      window.addEventListener('deviceorientation', function(eventData) {
+        // gamma is the left-to-right tilt in degrees, where right is positive
+
+        let tiltLR = eventData.gamma;
+        if (Math.abs(tiltLR - deviceOrientation[deviceOrientation.length-1]) > 0.05) {
+            deviceOrientation.shift();
+            deviceOrientation.push(tiltLR);
+            let averageOrientation = deviceOrientation.reduce(function(prev, curr){
+                return prev + curr
+            }, 0)/ deviceOrientation.length
+            socket.emit('xOrientationChange', {deviceXOrientation: averageOrientation})
+        }
+
+
+
+        // beta is the front-to-back tilt in degrees, where front is positive
+        let tiltFB = eventData.beta;
+
+        // alpha is the compass direction the device is facing in degrees
+        let dir = eventData.alpha
+
+        // call our orientation event handler
+      }, false);
+    } else {
+        alert('not supported')
+    }
+
+
+
     function getUserMedia(dictionary, callback) {
         try {
             navigator.getUserMedia =
@@ -103,8 +135,8 @@ app.controller('PlayerCtrl', function($scope) {
                 // we need to do a curve fit on correlations[] around best_offset in order to better determine precise
                 // (anti-aliased) offset.
 
-                // we know best_offset >=1, 
-                // since foundGoodCorrelation cannot go to true until the second pass (offset=1), and 
+                // we know best_offset >=1,
+                // since foundGoodCorrelation cannot go to true until the second pass (offset=1), and
                 // we can't drop into this clause until the following pass (else if).
                 var shift = (correlations[best_offset + 1] - correlations[best_offset - 1]) / correlations[best_offset];
                 return sampleRate / (best_offset + (8 * shift));
