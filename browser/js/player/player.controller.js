@@ -151,7 +151,7 @@ app.controller('PlayerCtrl', function($scope, Socket) {
         //	var best_frequency = sampleRate/best_offset;
     }
 
-    let lastFivePitches = [0, 0];
+    let lastFivePitches = [0, 0, 0, 0, 0];
     let i =0;
     function updatePitch(time) {
         // console.log(isPlaying)
@@ -173,13 +173,15 @@ app.controller('PlayerCtrl', function($scope, Socket) {
                 let averagePitch = lastFivePitches.reduce(function(prev, curr) {
                     return prev + curr
                 }, 0) / lastFivePitches.length; //should be 5, unless we change how many things to track
-                if(averagePitch > 500){
-                	velocity = 500/averagePitch;
-                } else if (averagePitch > 1000) {
+                if(averagePitch > 800){
+                	velocity = 800/averagePitch;
+                } else if (averagePitch > 1400) {
                 	velocity = 0;
                 }else {
-                	velocity = averagePitch/500;
+                	velocity = averagePitch/800;
                 }
+                console.log('last five', lastFivePitches)
+                console.log('average pitch',averagePitch)
                 $scope.prettyVelocity = Math.round(velocity * 230)
                 $scope.$apply();
                 Socket.emit('velocity', {velocity: velocity});
